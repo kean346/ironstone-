@@ -541,7 +541,7 @@
   <div class="app home" id="app">
     <div class="scene" aria-hidden="true">
       <img src="assets/powermechanics-background.jpg" alt="" fetchpriority="high">
-      <video id="background-video" autoplay muted playsinline preload="none" poster="assets/powermechanics-background.jpg" data-source="assets/powermechanics-background.mp4" data-loop-start="1.6"></video>
+      <video id="background-video" autoplay muted loop playsinline preload="none" poster="assets/powermechanics-background.jpg" data-source="assets/powermechanics-background.mp4"></video>
     </div>
     <header class="mast">
       <a class="brand" href="#overview" aria-label="PowerMechanics overview"><img src="assets/powermechanics.svg" width="29" height="27" alt=""></a>
@@ -1351,11 +1351,6 @@
     motion.addEventListener("change", () => render());
     video.addEventListener("loadeddata", () => {
       if (!motion.matches) video.classList.add("ready");
-    });
-    video.addEventListener("ended", () => {
-      // The opening push-in plays once, then the slower section loops.
-      video.currentTime = Number(video.dataset.loopStart);
-      syncVideo();
     });
     video.addEventListener("error", () => video.classList.remove("ready"));
 

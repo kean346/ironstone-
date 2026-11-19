@@ -4,4 +4,4 @@ A generator service management demo with four views covering the overview, clien
 
 Run `python3 -m http.server 8000` from the repository root and open `http://localhost:8000`. The app uses vanilla HTML, CSS, and JavaScript with no build step. It stores the fictional fleet and service records in the current browser. **Reset demo data** in the footer restores the sample records.
 
-The generator imagery was created for this demo. The bundled MP4 starts on a wider view, pushes in once, then loops a slower 12-second section. It runs silently on the overview and pauses when reduced motion is enabled. Inter Tight and JetBrains Mono are bundled with their SIL Open Font Licenses in assets/fonts.
+The generator imagery was created for this demo. The bundled MP4 zooms in and slowly back out around a fixed point in an eight-second loop. It runs silently on the overview and pauses when reduced motion is enabled. Inter Tight and JetBrains Mono are bundled with their SIL Open Font Licenses in assets/fonts.
