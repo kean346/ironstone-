@@ -95,6 +95,8 @@
     .mast a:focus-visible, .on-image:focus-visible { outline-color: var(--amber-light); }
 
     .overview {
+      --card-radius: clamp(14px, 1.55vw, 22px);
+      --card-divider: #594a3026;
       display: grid; grid-template-columns: minmax(0, 1.066fr) minmax(0, 1fr) minmax(0, 1.152fr) minmax(0, .902fr);
       grid-template-rows: clamp(265px, calc(57.5svh - 137.5px), 380px)
         clamp(0px, calc(33.33svh - 250px), 50px)
@@ -113,7 +115,7 @@
     .chips { display: flex; flex-wrap: wrap; gap: 7px; }
     .chip {
       display: inline-flex; align-items: center; gap: 7px; min-height: 34px; padding: 0 10px;
-      border: 1px solid #f5e1c3; border-radius: 6px; background: #eee1cc; color: #342c22;
+      border: 1px solid #f5e1c3; border-radius: 999px; background: #eee1cc; color: #342c22;
       font-size: 12px; transition: background .16s, transform .16s;
     }
     .chip:hover { background: #f8e8ca; transform: translateY(-1px); }
@@ -123,8 +125,10 @@
     .status-dot.soon { background: #b87c16; }
 
     .glass {
-      min-width: 0; padding: 14px; border-radius: 10px; background: var(--cream);
-      border: 1px solid #f8f0e1d9; backdrop-filter: blur(14px);
+      min-width: 0; padding: 14px; border-radius: var(--card-radius);
+      background: linear-gradient(145deg, #fffbf58c, #fffbf500 70%), var(--cream);
+      border: 1px solid #fff8ebc7; backdrop-filter: blur(14px);
+      box-shadow: 0 4px 14px #19171021;
     }
     .card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 19px; }
     .card-head .icon { width: 16px; height: 16px; color: #6f6759; }
@@ -140,9 +144,10 @@
     }
     .search-field input { padding-left: 37px; font-size: 14px; }
     .search-field input:focus, .form-field input:focus, .form-field textarea:focus { border-color: #957030; background: #fffdf7; }
+    .search-card input { border-radius: 999px; background: #fffcf5e6; }
     .search-results {
       position: absolute; inset: calc(100% - 2px) -1px auto; z-index: 6; background: #faf6ee;
-      border: 1px solid #d8cbb7; border-radius: 8px; padding: 5px; max-height: 250px; overflow: auto;
+      border: 1px solid #d8cbb7; border-radius: 12px; padding: 5px; max-height: 250px; overflow: auto;
       box-shadow: 0 5px 16px #24221d25;
     }
     .search-results a { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 8px; border-radius: 5px; font-size: 14px; }
@@ -155,13 +160,17 @@
     .text-link .icon { width: 14px; height: 14px; }
     .upcoming .text-link { font-size: 12px; min-height: 22px; }
     .upcoming ol { display: grid; gap: 4px; margin-top: 8px; }
+    .upcoming li + li, .metric + .metric { position: relative; }
+    .upcoming li + li::before, .metric + .metric::before {
+      content: ""; position: absolute; inset: -2px 7px auto; border-top: 1px solid var(--card-divider); pointer-events: none;
+    }
     .upcoming-row {
       display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 7px;
       min-height: 47px; padding: 5px 8px; border: 1px solid transparent;
-      background: var(--inset); border-radius: 6px; line-height: 1.15;
+      border-radius: 10px; line-height: 1.15;
       transition: border-color .15s, background .15s;
     }
-    .upcoming-row:hover { border-color: #bdab8a; background: #f6ebd6; }
+    .upcoming-row:hover { border-color: #d2bb9038; background: #f5e6c786; }
     .upcoming-row small { grid-column: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 12px; }
     .upcoming-row time { grid-column: 2; grid-row: 1; justify-self: end; }
     .upcoming-row .status { grid-column: 2; grid-row: 2; justify-self: end; }
@@ -173,7 +182,8 @@
     .recent {
       grid-area: 4 / 2 / 5 / 3; display: flex; flex-direction: column; justify-content: space-between;
       min-width: 0; overflow: hidden; position: relative; isolation: isolate; padding: 14px;
-      border-radius: 10px; border: 1px solid #f7ead87a; color: #fffaf0; background: #38382e;
+      border-radius: var(--card-radius); border: 1px solid #f7ead87a; color: #fffaf0; background: #38382e;
+      box-shadow: 0 4px 14px #19171021;
     }
     .recent img { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; object-position: center 52%; }
     .recent::before { content: ""; z-index: -1; position: absolute; inset: 0; background: linear-gradient(180deg, #181914b0, transparent 36%, #16171361 48%, #161713ed 93%); }
@@ -182,17 +192,17 @@
     .recent h3 { font-size: clamp(21px, 2vw, 28px); font-weight: 400; line-height: 1.08; letter-spacing: -.035em; }
     .recent time, .recent p { color: #f7edda; font-size: 12px; }
     .recent p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
-    .recent .text-link { justify-self: start; min-height: 29px; margin-top: 4px; padding: 3px 8px; border-radius: 5px; border: 1px solid #fff1d77d; background: #2d2b22b0; font-size: 12px; }
+    .recent .text-link { justify-self: start; min-height: 29px; margin-top: 4px; padding: 3px 8px; border-radius: 999px; border: 1px solid #fff1d77d; background: #2d2b22b0; font-size: 12px; }
 
     .chart-card { grid-area: 4 / 3 / 5 / 4; }
-    .chart-controls { display: flex; gap: 4px; margin-top: 8px; }
+    .chart-controls { display: flex; gap: 4px; margin-top: 8px; border-radius: 999px; background: #68523212; }
     .chart-controls button {
       flex: 1; min-width: 0; padding: 5px 3px; min-height: 27px; white-space: nowrap;
-      border: 1px solid transparent; border-radius: 4px; background: var(--inset);
+      border: 1px solid transparent; border-radius: 999px; background: transparent;
       font: 500 9px/1.2 var(--mono); transition: background .16s, border-color .16s;
     }
-    .chart-controls button:hover { border-color: #b7aa94; }
-    .chart-controls button[aria-pressed="true"] { background: #f8de9f; border-color: #eecb77; }
+    .chart-controls button:hover { background: #fffcf580; }
+    .chart-controls button[aria-pressed="true"] { background: #f7dfa9; border-color: #d9ae5b66; }
     .chart { margin-top: 5px; }
     .chart svg { width: 100%; height: 82px; display: block; overflow: visible; }
     .chart text { font: 500 9px var(--mono); fill: #5e574a; }
@@ -204,7 +214,7 @@
     .chart figcaption { font-size: 11px; color: var(--muted); }
 
     .health { grid-area: 1 / 4 / 2 / 5; display: flex; flex-direction: column; }
-    .health .card-head { padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+    .health .card-head { padding-bottom: 12px; }
     .health .card-head .icon { color: #786442; }
     .gauge { flex: 1; display: grid; place-content: center; min-height: 0; text-align: center; }
     .gauge-dial { position: relative; width: min(100%, 280px); margin: 0 auto; }
@@ -215,7 +225,7 @@
     .gauge-text p { font-size: 14px; margin-top: 3px; }
     .gauge-scale { display: flex; justify-content: space-between; padding: 0 11%; color: var(--muted); font-size: 10px; }
     .health-indicators { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 11px; }
-    .health-indicators div { background: var(--inset); border-radius: 6px; padding: 9px 8px; }
+    .health-indicators div { border-top: 1px solid var(--card-divider); padding: 9px 8px; }
     .health-indicators .eyebrow { display: flex; align-items: center; gap: 6px; font-size: 9px; }
     .health-indicators strong { font-weight: 400; display: block; font-size: 26px; letter-spacing: -.05em; line-height: 1.08; margin-top: 5px; }
     .summary { grid-area: 2 / 4 / 5 / 5; display: flex; flex-direction: column; }
@@ -223,14 +233,15 @@
     .metric {
       display: grid; grid-template: auto auto / 1fr auto; align-content: center; align-items: center;
       gap: 2px 7px; min-width: 0; min-height: 75px; padding: 8px 12px;
-      background: var(--inset); border: 1px solid #dfd8cb; border-radius: 7px;
+      border: 1px solid transparent; border-radius: 12px;
       transition: background .16s, border-color .16s;
     }
-    .metric:hover { background: #f7ead2; border-color: #cbb88f; }
+    .metric:hover { background: #f5e6c786; border-color: #d2bb9038; }
     .metric .value { font-size: clamp(37px, 4vw, 57px); font-weight: 300; line-height: .98; letter-spacing: -.07em; font-variant-numeric: tabular-nums; }
     .metric .eyebrow { color: #524b3d; }
     .tile { display: grid; flex: none; place-items: center; place-self: center end; grid-area: 1 / 2 / 3; width: 39px; height: 39px; border: 1px solid #e7cb96; border-radius: 7px; background: #f4dfb7; color: #694b1b; }
     .tile .icon { width: 19px; height: 19px; }
+    .summary .tile { border-radius: 50%; border-color: #dbba7b80; background: #f5e2bd; }
 
     .footer { display: flex; align-items: center; gap: 8px 15px; flex-wrap: wrap; justify-content: space-between; min-height: 44px; padding: 7px 15px; color: var(--muted); font-size: 12px; }
     .home .footer { color: #fff6e6; background: #1617139e; border-top: 1px solid #ffffff2b; }
