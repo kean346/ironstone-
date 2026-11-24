@@ -1,7 +1,15 @@
-# PowerMechanics
+# Ironstone
 
-A generator service management demo with four views covering the overview, clients and generators, the service log, and the service schedule.
+Ironstone is a browser-based sales demo for three independent businesses: Boreholes, Asbestos Removal and Plant Hire. Each workspace has its own enquiries, quotations, clients and follow-ups. **See how it works** opens the guided WhatsApp simulation and writes its sample records into the chosen workspace.
 
-Run `python3 -m http.server 8000` from the repository root and open `http://localhost:8000`. The app uses vanilla HTML, CSS, and JavaScript with no build step. It stores the fictional fleet and service records in the current browser. **Reset demo data** in the footer restores the sample records.
+## Run locally
 
-The generator imagery was created for this demo. The bundled MP4 zooms in over 2.2 seconds, then eases back out over 15.8 seconds. The 18-second loop plays silently on the overview and pauses when reduced motion is enabled. Inter Tight and JetBrains Mono are bundled with their SIL Open Font Licenses in assets/fonts.
+From the repository root, run:
+
+```sh
+python3 -m http.server 8000 --bind 127.0.0.1
+```
+
+Open [localhost:8000](http://localhost:8000). The app uses HTML, CSS and JavaScript modules with no build step. Data stays in this browser using local storage. **Replay** restarts the guided workflow for the selected business and removes its prior guided-demo records. **Reset demo data** restores the initial records across all three workspaces.
+
+WhatsApp and email actions are simulations. The original PowerMechanics background is bundled and continues looping while the app changes views. Reduced-motion preferences pause it. The business photography is original generated artwork for this demo with 3840 px wide backdrop exports for high-resolution displays. Inter Tight and JetBrains Mono ship with their SIL Open Font Licenses in `assets/fonts`.
