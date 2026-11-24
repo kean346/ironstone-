@@ -62,9 +62,14 @@ function enquiryChart(days, series) {
       const offset = (tiedSeries.indexOf(index) - (tiedSeries.length - 1) / 2) * 5;
       return { x: 8 + day * 104, y: baseline - count / scale[0] * plotHeight + offset };
     });
-    const coordinates = points.map(({ x, y }) => `${x},${y}`).join(' ');
-    return `<g style="--chart-accent:${business.accent}; --series-order:${index}">
-      <polyline class="trend-line" pathLength="1" points="${coordinates}"/>
+    const start = points[0];
+    const curves = points.slice(1).map(({ x, y }, segment) => {
+      const previous = points[segment];
+      const midpoint = (previous.x + x) / 2;
+      return `C ${midpoint} ${previous.y}, ${midpoint} ${y}, ${x} ${y}`;
+    });
+    return `<g data-trend="${business.id}" style="--chart-accent:${business.accent}; --series-order:${index}">
+      <path class="trend-line" pathLength="1" d="M ${start.x} ${start.y} ${curves.join(' ')}"/>
       ${points.map(({ x, y }, day) => `<circle class="trend-point" cx="${x}" cy="${y}" r="3">
         <title>${days[day].label} · ${business.name}: ${counts[day]}</title>
       </circle>`).join('')}

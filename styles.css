@@ -461,8 +461,13 @@ body[data-page="demo"] .scene::after {
 @keyframes enter-down { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
 @keyframes reveal-title { from { opacity: 0; transform: translateY(10px); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
 @keyframes draw-trend {
-  from { stroke-dasharray: 1; stroke-dashoffset: 1; }
+  from { stroke-dasharray: 1; stroke-dashoffset: var(--trend-direction, 1); }
   to { stroke-dasharray: 1; stroke-dashoffset: 0; }
+}
+@keyframes expand-trend {
+  from { stroke-dasharray: 0 1; stroke-dashoffset: -.5; opacity: 0; }
+  10% { opacity: 1; }
+  to { stroke-dasharray: 1 0; stroke-dashoffset: 0; opacity: 1; }
 }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 
@@ -473,6 +478,8 @@ body[data-page="demo"] .scene::after {
 .home-entrance .home-panel + .home-panel { animation-delay: .21s; }
 .home-entrance .business-card { animation: enter-up .58s calc(.26s + var(--card-order, 0) * .075s) var(--out) backwards; }
 .home-entrance .trend-line { animation: draw-trend 1.45s calc(.32s + var(--series-order, 0) * .22s) ease-in-out backwards; }
+.home-entrance [data-trend="asbestos"] .trend-line { --trend-direction: -1; animation-timing-function: var(--out); }
+.home-entrance [data-trend="plant"] .trend-line { animation-name: expand-trend; }
 .home-entrance .trend-point { animation: fade-in .28s calc(1.77s + var(--series-order, 0) * .22s) var(--out) both; }
 
 @media (max-width: 1000px) {
