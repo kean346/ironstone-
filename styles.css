@@ -472,8 +472,8 @@ body[data-page="demo"] .scene::after {
 .home-entrance .home-panel { animation: enter-up .56s .14s var(--out) both; }
 .home-entrance .home-panel + .home-panel { animation-delay: .21s; }
 .home-entrance .business-card { animation: enter-up .58s calc(.26s + var(--card-order, 0) * .075s) var(--out) backwards; }
-.home-entrance .trend-line { animation: draw-trend 1.45s calc(.32s + var(--series-order, 0) * .09s) ease-in-out backwards; }
-.home-entrance .trend-point { animation: fade-in .28s calc(1.77s + var(--series-order, 0) * .09s) var(--out) both; }
+.home-entrance .trend-line { animation: draw-trend 1.45s calc(.32s + var(--series-order, 0) * .22s) ease-in-out backwards; }
+.home-entrance .trend-point { animation: fade-in .28s calc(1.77s + var(--series-order, 0) * .22s) var(--out) both; }
 
 @media (max-width: 1000px) {
   .mast-inner, .site-footer, .home-wrap { width: calc(100% - 60px); }

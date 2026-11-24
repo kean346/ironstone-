@@ -54,11 +54,14 @@ function enquiryChart(days, series) {
   const scale = [3 * step, 2 * step, step, 0];
   const plotHeight = 148;
   const baseline = 156;
+  const countsByDay = days.map((_, day) => series.map(({ counts }) => counts[day]));
   const lines = series.map(({ business, counts }, index) => {
-    const points = counts.map((count, day) => ({
-      x: 8 + day * 104,
-      y: baseline - count / scale[0] * plotHeight
-    }));
+    const points = counts.map((count, day) => {
+      // Separate tied marks visually while keeping their exact counts in the labels.
+      const tiedSeries = countsByDay[day].flatMap((value, position) => value === count ? [position] : []);
+      const offset = (tiedSeries.indexOf(index) - (tiedSeries.length - 1) / 2) * 5;
+      return { x: 8 + day * 104, y: baseline - count / scale[0] * plotHeight + offset };
+    });
     const coordinates = points.map(({ x, y }) => `${x},${y}`).join(' ');
     return `<g style="--chart-accent:${business.accent}; --series-order:${index}">
       <polyline class="trend-line" pathLength="1" points="${coordinates}"/>
