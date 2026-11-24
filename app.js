@@ -1,10 +1,9 @@
-import { businesses, getBusiness, getMetrics, resetDemo } from './data.js';
+import { businesses, getBusiness, getMetrics, getOperationsOverview, formatDate, today, resetDemo } from './data.js';
 import { renderWorkspace } from './workspace.js';
 import { renderDemo } from './demo.js';
 
 const app = document.querySelector('#app');
 const main = document.querySelector('#main');
-const video = document.querySelector('#background-video');
 const businessScene = document.querySelector('#business-scene');
 const motion = matchMedia('(prefers-reduced-motion: reduce)');
 const resetDialog = document.querySelector('#reset-dialog');
@@ -17,6 +16,7 @@ const menus = [...document.querySelectorAll('.mast-menu')];
 const glyphs = {
   arrow: '<path d="M4 12h15m-6-6 6 6-6 6"/>',
   play: '<path d="m9 5 10 7-10 7z"/>',
+  clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 8v4l3 2"/>',
   check: '<path d="m5 12 4 4 10-10"/>'
 };
 
@@ -24,6 +24,9 @@ let previousRoute;
 let chosenCardOrigin;
 let toastTimer;
 const icon = name => `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${glyphs[name]}</svg>`;
+const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+}[character]));
 
 function homeCard(business, index) {
   const { id, name, subtitle, accent, image } = business;
@@ -33,7 +36,6 @@ function homeCard(business, index) {
       <div class="card-image">
         <img src="${image}" alt="" width="780" height="520" decoding="async"${index ? ' loading="lazy"' : ''}>
         <div class="card-caption">
-          <span class="card-accent" aria-hidden="true"></span>
           <h3>${name}</h3>
           <p>${subtitle}</p>
         </div>
@@ -42,22 +44,85 @@ function homeCard(business, index) {
         <div><b data-count="${openEnquiries}">${openEnquiries}</b><span>Open enquiries</span></div>
         <div><b data-count="${pendingQuotations}">${pendingQuotations}</b><span>Pending quotations</span></div>
       </div>
-      <div class="card-link"><span>Open workspace</span><span class="card-arrow">${icon('arrow')}</span></div>
+      <span class="card-link card-arrow" aria-hidden="true">${icon('arrow')}</span>
     </a>`;
 }
 
+function enquiryChart(days, series) {
+  const maxCount = Math.max(...series.flatMap(({ counts }) => counts));
+  const step = Math.max(1, Math.ceil(maxCount / 3));
+  const scale = [3 * step, 2 * step, step, 0];
+  const plotHeight = 148;
+  const baseline = 156;
+  const lines = series.map(({ business, counts }, index) => {
+    const points = counts.map((count, day) => ({
+      x: 8 + day * 104,
+      y: baseline - count / scale[0] * plotHeight
+    }));
+    const coordinates = points.map(({ x, y }) => `${x},${y}`).join(' ');
+    return `<g style="--chart-accent:${business.accent}; --series-order:${index}">
+      <polyline class="trend-line" pathLength="1" points="${coordinates}"/>
+      ${points.map(({ x, y }, day) => `<circle class="trend-point" cx="${x}" cy="${y}" r="3">
+        <title>${days[day].label} · ${business.name}: ${counts[day]}</title>
+      </circle>`).join('')}
+    </g>`;
+  }).join('');
+  const summary = series.map(({ business, counts }) =>
+    `${business.name}: ${days.map(({ label }, index) => `${label} ${counts[index]}`).join(', ')}.`
+  ).join(' ');
+
+  return `<section class="home-panel home-chart-panel" aria-labelledby="enquiry-activity">
+    <header><h2 id="enquiry-activity">Enquiry activity</h2><span>Enquiries per day</span></header>
+    <div class="home-chart-area">
+      <div class="home-chart-scale" aria-hidden="true">${scale.map(value => `<span>${value}</span>`).join('')}</div>
+      <svg class="home-chart" viewBox="0 0 640 164" preserveAspectRatio="none" role="img" aria-labelledby="enquiry-activity" aria-describedby="trend-description">
+        <desc id="trend-description">${summary}</desc>
+        <path class="trend-grid" d="${scale.map((_, index) => `M8 ${8 + index * plotHeight / 3} H632`).join(' ')}"/>
+        ${lines}
+      </svg>
+      <div class="home-chart-labels" aria-hidden="true">${days.map(({ label }) => `<span>${label}</span>`).join('')}</div>
+    </div>
+    <div class="home-legend">${series.map(({ business }) =>
+      `<span style="--chart-accent:${business.accent}">${business.name}</span>`
+    ).join('')}</div>
+  </section>`;
+}
+
+function attentionPanel(followUps) {
+  const date = today();
+  const showDate = due => due === date ? 'Today' : due < date ? 'Overdue' : formatDate(due);
+  return `<section class="home-panel home-attention" aria-labelledby="attention-heading">
+    <header><h2 id="attention-heading">Needs attention</h2><span>${followUps.length} ${followUps.length === 1 ? 'item' : 'items'}</span></header>
+    ${followUps.length ? `<ul class="home-followups">${followUps.map(({ business, customer, task, date: due }) =>
+      `<li><a href="#workspace/${business.id}/follow-ups" style="--chart-accent:${business.accent}">
+        <span class="follow-icon">${icon('clock')}</span>
+        <div><strong>${escapeHtml(task)}</strong><small>${business.name} · ${escapeHtml(customer)}</small></div>
+        <time datetime="${escapeHtml(due)}">${showDate(due)}</time>
+      </a></li>`
+    ).join('')}</ul>` : '<p class="home-attention-empty">You’re all caught up.</p>'}
+  </section>`;
+}
+
 function renderHome(animate) {
+  const { days, series, followUps } = getOperationsOverview();
   main.innerHTML = `
     <div class="home-wrap${animate ? ' home-entrance' : ''}">
       <section class="home-hero" aria-labelledby="home-heading">
-        <h1 id="home-heading">Three businesses.<br><span>One workspace.</span></h1>
-        <div class="home-hero-foot">
-          <p>Manage your clients, enquiries and quotations without the unnecessary admin.</p>
-          <a class="hero-action" href="#demo"><span class="hero-play">${icon('play')}</span>See how it works</a>
+        <div>
+          <h1 id="home-heading">Operations <span>overview.</span></h1>
+          <div class="home-hero-foot">
+            <p>Enquiries, quotes and follow-ups across all three businesses.</p>
+            <a class="hero-action" href="#demo"><span class="hero-play">${icon('play')}</span>See how it works</a>
+          </div>
         </div>
+        <span class="home-date">Last 7 days</span>
       </section>
+      <div class="home-boards">
+        ${enquiryChart(days, series)}
+        ${attentionPanel(followUps)}
+      </div>
       <section class="business-picker" aria-labelledby="business-heading">
-        <div class="business-heading"><h2 id="business-heading">Your businesses</h2><span aria-hidden="true"></span></div>
+        <div class="business-heading"><h2 id="business-heading">Business workspaces</h2></div>
         <div class="business-grid">${businesses.map(homeCard).join('')}</div>
       </section>
     </div>`;
@@ -131,7 +196,7 @@ function render({ navigate = false } = {}) {
     renderDemo(main);
   } else {
     document.title = 'Ironstone · Business overview';
-    renderHome(!previousRoute);
+    renderHome(newPage);
   }
 
   if (navigate) {
@@ -149,16 +214,8 @@ function render({ navigate = false } = {}) {
   previousRoute = route;
 }
 
-function syncVideo() {
-  if (motion.matches || navigator.connection?.saveData || document.hidden) {
-    video.pause();
-    if (motion.matches) video.classList.remove('ready');
-    return;
-  }
-  video.muted = true;
-  if (!video.getAttribute('src')) video.src = video.dataset.source;
-  if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) video.classList.add('ready');
-  video.play().catch(() => video.classList.remove('ready'));
+function updateSceneMotion() {
+  document.body.classList.toggle('motion-paused', document.hidden);
 }
 
 document.addEventListener('click', event => {
@@ -189,11 +246,20 @@ document.querySelector('.skip-link').addEventListener('click', event => {
 });
 
 main.addEventListener('pointermove', event => {
-  const card = event.target.closest('.business-card');
+  const card = event.target.closest('.business-card, .home-panel');
   if (!card || motion.matches || event.pointerType !== 'mouse') return;
   const bounds = card.getBoundingClientRect();
-  card.style.setProperty('--shift-x', `${((event.clientX - bounds.left) / bounds.width - .5) * -13}px`);
-  card.style.setProperty('--shift-y', `${((event.clientY - bounds.top) / bounds.height - .5) * -9}px`);
+  const x = (event.clientX - bounds.left) / bounds.width - .5;
+  const y = (event.clientY - bounds.top) / bounds.height - .5;
+  card.classList.add('pointer-hover');
+  card.style.setProperty('--card-shift', `${x * 9}px`);
+  card.style.setProperty('--shift-x', `${x * -13}px`);
+  card.style.setProperty('--shift-y', `${y * -9}px`);
+});
+
+main.addEventListener('pointerout', event => {
+  const card = event.target.closest('.pointer-hover');
+  if (card && !card.contains(event.relatedTarget)) card.classList.remove('pointer-hover');
 });
 
 resetDialog.querySelector('form').addEventListener('submit', event => {
@@ -209,11 +275,6 @@ resetDialog.querySelector('form').addEventListener('submit', event => {
 window.addEventListener('hashchange', () => render({ navigate: true }));
 window.addEventListener('ironstone:records-changed', updateNotifications);
 window.addEventListener('storage', updateNotifications);
-document.addEventListener('visibilitychange', syncVideo);
-motion.addEventListener('change', syncVideo);
-video.addEventListener('loadeddata', () => {
-  if (!motion.matches) video.classList.add('ready');
-});
-video.addEventListener('error', () => video.classList.remove('ready'));
-syncVideo();
+document.addEventListener('visibilitychange', updateSceneMotion);
+updateSceneMotion();
 render();

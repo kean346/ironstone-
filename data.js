@@ -61,6 +61,12 @@ const seedRows = {
   ],
 };
 
+const seedEnquiryDayOffsets = {
+  boreholes: [0, -1, -3, -5, -8],
+  asbestos: [-1, -2, -2, -6, -9],
+  plant: [0, -1, -1, -4, -7],
+};
+
 const sourceNames = ["WhatsApp", "Email", "Manual entry"];
 const enquiryStatuses = ["New", "In progress", "Quoted", "Accepted", "Closed"];
 const quotationStatuses = ["Draft", "Sent", "Accepted", "Declined"];
@@ -71,6 +77,7 @@ const dateParts = new Intl.DateTimeFormat("en-CA", {
 const dateLabel = new Intl.DateTimeFormat("en-ZA", {
   timeZone: "UTC", year: "numeric", month: "short", day: "numeric",
 });
+const weekdayLabel = new Intl.DateTimeFormat("en-ZA", { timeZone: "UTC", weekday: "short" });
 const rand = new Intl.NumberFormat("en-ZA", {
   style: "currency", currency: "ZAR", maximumFractionDigits: 2, minimumFractionDigits: 0,
 });
@@ -80,8 +87,8 @@ export function today() {
   return `${parts.year}-${parts.month}-${parts.day}`;
 }
 
-function daysFromToday(days) {
-  const date = new Date(today() + "T00:00:00Z");
+function daysFromToday(days, currentDate = today()) {
+  const date = new Date(currentDate + "T00:00:00Z");
   date.setUTCDate(date.getUTCDate() + days);
   return date.toISOString().slice(0, 10);
 }
@@ -115,7 +122,7 @@ function seedWorkspace(id, businessIndex) {
     const quotationId = `quotation-${record}`;
     const phone = `+27 10 555 0${businessIndex + 1}${String(index + 1).padStart(2, "0")}`;
     const email = `${mailbox}@example.test`;
-    const date = daysFromToday(-1 - index * 2);
+    const date = daysFromToday(seedEnquiryDayOffsets[id][index]);
     const communications = [{ date, source, message: `Enquiry received for ${service.toLowerCase()}.` }];
     workspace.clients.push({ id: clientId, name: customer, phone, email, communications });
     workspace.enquiries.push({ id: enquiryId, clientId, customer, phone, email, service, source, date, status });
@@ -193,6 +200,28 @@ export function getMetrics(id) {
     acceptedQuotations: quotations.filter(quote => quote.status === "Accepted").length,
     followUpsDue: followUps.filter(reminder => !reminder.completed && reminder.date <= date).length,
   };
+}
+
+export function getOperationsOverview() {
+  const { workspaces } = readState();
+  const currentDate = today();
+  const days = Array.from({ length: 7 }, (_, index) => {
+    const date = daysFromToday(index - 6, currentDate);
+    return { date, label: weekdayLabel.format(new Date(date + "T00:00:00Z")) };
+  });
+  const series = businesses.map(business => {
+    const dailyCounts = new Map(days.map(({ date }) => [date, 0]));
+    for (const { date } of workspaces[business.id].enquiries) {
+      if (dailyCounts.has(date)) dailyCounts.set(date, dailyCounts.get(date) + 1);
+    }
+    return { business, counts: [...dailyCounts.values()] };
+  });
+  const followUps = businesses.flatMap(business => workspaces[business.id].followUps
+    .filter(reminder => !reminder.completed)
+    .map(reminder => ({ ...reminder, business })))
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(0, 3);
+  return { days, series, followUps };
 }
 
 function changeWorkspace(id, action) {
